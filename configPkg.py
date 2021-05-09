@@ -8,8 +8,9 @@ Created on Sat Apr 10 15:59:49 2021
 import os
 
 # Params
-FIRST_HOLDER = 50
-LAST_HOLDER = 60
+first_holder = 50
+default_last_holder = 3050
+percentage_to_consider = 15
 
 # Constants
 INFURA_ID = os.getenv('INFURA_ID')
@@ -19,7 +20,7 @@ ethscan_exports_path = os.getcwd()+'/etherscanExports/'
 token_data_path = os.getcwd()+'/tokenData/'
 dict_of_conv = {
     '1': 'wei',
-    '1000': 'kwei' ,
+    '1000': 'kwei',
     '1000000': 'mwei' ,
     '1000000000': 'gwei',
     '1000000000000': 'micro' ,

@@ -6,5 +6,5 @@ Steps to run:
 3. Download csv files (with holders adresses) from **etherscan.io**
 4. Put all csv files into the folder **etherscanExports**
 5. Run **tokenHoldersChecker.py**
-   - number of holders can be manipulated by parameters FIRST_HOLDER and LAST_HOLDER in configPkg.py
-7. Outputs will be in folder **tokeData**
+6. Outputs will be in folder **tokeData**
+7. Run **charts.py** in order to get spreadsheet **Token_Total_Balances** which shows the balances for all queried ERC20 tokens

@@ -12,22 +12,27 @@ from web3 import Web3
 from datetime import datetime
 
 from configPkg import dict_of_conv, ethscan_exports_path, token_data_path
-from configPkg import FIRST_HOLDER, LAST_HOLDER
+from configPkg import first_holder, default_last_holder, percentage_to_consider
 
 
 def filterDataByHolder(csv_name, outputs, current_balance_str):
+    global last_holder
+    last_holder = default_last_holder
     contract_holders = pd.read_csv(ethscan_exports_path + csv_name)
     contract_holders.drop('PendingBalanceUpdate', axis=1, inplace=True)
     contract_holders.sort_values("Balance", ascending=False, inplace=True)
-    contract_holders_head = contract_holders[FIRST_HOLDER:LAST_HOLDER]
+    if int(len(contract_holders.index) * (percentage_to_consider/100)) < last_holder:
+        last_holder = int(len(contract_holders.index) * percentage_to_consider/100)
+    contract_holders_head = contract_holders[first_holder:last_holder]
     contract_holders_head.set_index("HolderAddress", inplace=True)
+
     contract_holders_head.rename(columns={"Balance": current_balance_str}, inplace=True)
     new_row_sum = pd.Series(data={current_balance_str: contract_holders_head[current_balance_str].sum()}, name='Total Balance')
     contract_holders_head = contract_holders_head.append(new_row_sum)
     contract_holders_head.to_csv(outputs['csv'])
     contract_holders_head.to_json(outputs['json'], orient='index', indent=4)
     
-def fecthDatabyHolder(outputs, current_balance_str, contract, web3_provider):
+def fetchDataByHolder(outputs, current_balance_str, contract, web3_provider):
     csv_contract_holders = {}
     csv_contract_holders[current_balance_str] = []
     safe_address = ''
@@ -38,13 +43,17 @@ def fecthDatabyHolder(outputs, current_balance_str, contract, web3_provider):
             break
         safe_address = Web3.toChecksumAddress(holder)
         balance = contract.functions.balanceOf(Web3.toChecksumAddress(safe_address)).call()
-        csv_contract_holders[current_balance_str].append(float(web3_provider.fromWei(balance, dict_of_conv['1{}'.format('0'*decimals)])))
+        try:
+            converted_balance = float(web3_provider.fromWei(balance, dict_of_conv['1{}'.format('0'*decimals)]))
+        except:
+            converted_balance = float(balance / int('1{}'.format('0'*decimals)))
+        csv_contract_holders[current_balance_str].append(converted_balance)
         '''print("Holder {} has {} of {}".format(holder,
                                               web3_provider.fromWei(csv_contract_holders['Balance'],
                                                            dict_of_conv['1{}'.format('0'*decimals)]),
                                               symbol))'''
     csv_contract_holders[current_balance_str].append(sum(csv_contract_holders[current_balance_str]))
-    print(csv_contract_holders)
+    #print(csv_contract_holders)
     contract_holders_head.set_index("HolderAddress", inplace=True)
     contract_holders_head[current_balance_str] = pd.DataFrame(csv_contract_holders,index=contract_holders_head.index)
     contract_holders_head.to_csv(outputs['csv'])
@@ -71,4 +80,4 @@ def createDataForContract(csv_name, web3_provider, abi):
         filterDataByHolder(csv_name, outputs, current_balance_str)
     else:
         # Not first run - take data from blockchain
-        fecthDatabyHolder(outputs, current_balance_str, contract, web3_provider)
+        fetchDataByHolder(outputs, current_balance_str, contract, web3_provider)
