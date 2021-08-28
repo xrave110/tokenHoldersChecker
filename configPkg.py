@@ -11,11 +11,12 @@ import os
 first_holder = 50
 default_last_holder = 3050
 percentage_to_consider = 15
+from dotenv import load_dotenv
 
 # Constants
-INFURA_ID = os.getenv('INFURA_ID')
-
-infura_url = 'https://mainnet.infura.io/v3/' + INFURA_ID
+load_dotenv()
+node_provider = os.getenv("INFURA_ID")
+infura_url = 'https://mainnet.infura.io/v3/' + node_provider
 ethscan_exports_path = os.getcwd()+'/etherscanExports/'
 token_data_path = os.getcwd()+'/tokenData/'
 dict_of_conv = {
